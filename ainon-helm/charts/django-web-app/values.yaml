@@ -1,0 +1,135 @@
+replicaCount: 1
+
+image:
+  repository: pivotai/ainon-app
+  tag: "latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: dockerhub-secret
+
+serviceAccountName: "aws-secret-csi"
+
+podLabels:
+  app: django-web-app
+  tier: backend 
+
+service:
+  type: ClusterIP
+  port: 8010
+  targetPort: 8010
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/$1"
+    nginx.ingress.kubernetes.io/cors-allow-headers: X-Forwarded-For
+    nginx.ingress.kubernetes.io/proxy-body-size: "600m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.org/client-max-body-size: "600"   
+  hosts:
+    - host: "www.testainondomain.com"
+      paths:
+        - path: /api/?(.*)
+          pathType: ImplementationSpecific
+        - path: /static/?(.*)
+          pathType: ImplementationSpecific
+  tls: []
+
+configMaps:
+  backendEnv:
+    name: backend-env
+
+volumes:
+  - name: backend-env-volume
+    type: configMap
+    configMapName: backend-env
+    defaultMode: 420  
+
+volumeMounts:
+  - name: backend-env-volume
+    mountPath: /ainon/env.docker.json
+    subPath: env.docker.json
+
+secretsStore:
+  enabled: true
+  volumeName: secrets-store-inline
+  mountPath: "/ainon/aws-secret"
+  secretProviderClassName: "aws-secrets"
+
+env:
+  enabled: true
+  items:
+    - name: REDIS_HOST
+      value: redis-service
+    - name: HOST_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.hostIP
+    - name: ENV_FILE_NAME
+      value: env.docker.json
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# resources:
+#   requests:
+#     cpu: 500m
+#   limits:
+#     cpu: 2000m
+
+#--- ohter params -----------
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+
+
+#liveness and readiness probes 
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

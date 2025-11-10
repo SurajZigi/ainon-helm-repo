@@ -1,0 +1,84 @@
+# Global defaults readable by subcharts via .Values.global.*
+global:
+  domain: ainon.dev
+  imagePullPolicy: IfNotPresent
+  namespace: test
+
+# Enable/disable subcharts
+appConfigs:
+  enabled: true
+adminApp:
+  enabled: true
+celeryBeat:
+  enabled: true
+celeryWorker:
+  enabled: true
+celeryWorkerHeavy:
+  enabled: true
+clamav:
+  enabled: true
+djangoWebApp:
+  enabled: true
+postgres:
+  enabled: true
+proxy:
+  enabled: true
+redis:
+  enabled: true
+userApp:
+  enabled: true
+
+
+# Per-subchart overrides (keys must match each subchart's chart name)
+admin-app:
+  fullnameOverride: admin-app
+celery-beat:
+  fullnameOverride: celery-beat
+celery-worker:
+  fullnameOverride: celery-worker
+celery-worker-heavy:
+  fullnameOverride: celery-worker-heavy
+clamav:
+  fullnameOverride: clamav
+django-web-app:
+  fullnameOverride: django-web-app
+postgres:
+  fullnameOverride: postgres
+proxy:
+  fullnameOverride: proxy
+redis:
+  fullnameOverride: redis
+user-app:
+  fullnameOverride: user-app
+
+
+
+# django-web-app:
+#   replicas: 1
+
+# redis:
+#   replicas: 1
+
+# postgres:
+#   replicas: 1
+
+# celery-beat:
+#   replicas: 1
+
+# celery-worker:
+#   replicas: 1
+
+# celery-worker-heavy:
+#   replicas: 1
+
+# clamav:
+#   replicas: 1
+
+# proxy:
+#   replicas: 1
+
+# admin-app:
+#   replicas: 1
+
+# user-app:
+#   replicas: 1

@@ -1,0 +1,117 @@
+replicaCount: 1
+
+image:
+  repository: pivotai/ainon-app
+  tag: "latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: dockerhub-secret
+
+serviceAccountName: "aws-secret-csi"
+
+podLabels:
+  app: celery-worker
+  tier: backend 
+
+
+command:
+  shell: "/bin/sh"
+  enabled: true
+  args:
+    - >
+      celery -A config.celery_aks worker -l info
+      --concurrency=6 --max-tasks-per-child=2 --time-limit=600;
+env:
+  enabled: true
+  items:
+    - name: REDIS_HOST
+      value: "redis-service"
+    - name: ENV_FILE_NAME
+      value: "env.docker.json"
+
+configMaps:
+  backendEnv:
+    name: backend-env
+    key: env.docker.json
+    
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+resources:
+  requests:
+    cpu: 200m
+  limits:
+    cpu: 1000m
+
+volumes:
+  - name: backend-env-volume
+    configMapName: backend-env
+    defaultMode: 420
+
+volumeMounts:
+  - name: backend-env-volume
+    mountPath: /ainon/env.docker.json
+    subPath: env.docker.json
+
+secretsStore:
+  enabled: true
+  volumeName: secrets-store-inline
+  mountPath: "/ainon/aws-secret"
+  secretProviderClassName: "aws-secrets"
+
+#--- ohter params -----------
+nameOverride: ""
+fullnameOverride: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+podAnnotations: {}
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ""
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  enabled: false
+  type: NodePort
+  port: []
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers

@@ -1,0 +1,128 @@
+replicaCount: 1
+
+image:
+  repository: pivotai/ainon-app
+  tag: "latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: dockerhub-secret
+
+serviceAccountName: "aws-secret-csi"
+
+podLabels:
+  app: celery-worker-heavy
+  type: backend
+
+command:
+  shell: "/bin/sh"
+  enabled: true
+  args:
+    - >
+      celery -A config.celery_aks worker -l info -Q heavy
+      --concurrency=2 --max-tasks-per-child=2 --time-limit=600;
+
+env:
+  enabled: true
+  items:
+    - name: REDIS_HOST
+      value: "redis-service"
+    - name: ENV_FILE_NAME
+      value: "env.docker.json"
+
+configMaps:
+  backendEnv:
+    name: backend-env
+    key: env.docker.json
+    
+volumes:
+  - name: backend-env-volume
+    configMapName: backend-env
+    defaultMode: 420
+
+volumeMounts:
+  - name: backend-env-volume
+    mountPath: /ainon/env.docker.json
+    subPath: env.docker.json
+
+secretsStore:
+  enabled: true
+  volumeName: secrets-store-inline
+  mountPath: "/ainon/aws-secret"
+  secretProviderClassName: "aws-secrets"
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+resources:
+  requests:
+    cpu: 200m
+  limits:
+    cpu: 1000m  
+#--- ohter params -----------
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+serviceAccount:
+  create: false
+  automount: false
+  # Annotations to add to the service account
+  annotations: {}
+  name: ""
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  enabled: false
+  type: NodePort
+  port: []
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,116 @@
+replicaCount: 1
+
+image:
+  repository: pivotai/ainon-app-admin
+  tag: "latest"  
+  pullPolicy: Always 
+
+imagePullSecrets:
+  - name: dockerhub-secret
+
+podLabels:
+  app: admin-app
+  tier: frontend
+
+service:
+  type: ClusterIP
+  port: 3002
+  containerPort: 3002
+  targetPort: 3002
+
+env:
+  enabled: true
+  items:
+    - name: HOST_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.hostIP  
+
+configMaps:
+  frontendAdminEnv:
+    name: frontend-admin-env
+    
+volumes:
+  - name: frontend-admin-env-volume
+    configMapName: frontend-admin-env  
+    defaultMode: 420
+    items:
+      - key: ".env"
+        path: ".env" 
+
+volumeMounts:
+  - name: frontend-admin-env-volume
+    mountPath: /app/.env
+    subPath: .env 
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+resources:
+  requests:
+    cpu: 200m
+  limits:
+    cpu: 1200m
+    
+#----------------- ohter params -----------------
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# -- Expose the service via gateway-api HTTPRoute
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

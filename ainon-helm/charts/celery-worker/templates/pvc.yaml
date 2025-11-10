@@ -1,0 +1,27 @@
+{{- if and .Values.persistence .Values.persistence.pvc .Values.persistence.pvc.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.persistence.pvc.name | quote }}
+  {{- with .Values.persistence.pvc.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.persistence.pvc.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.pvc.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.pvc.size | quote }}
+  volumeMode: {{ default "Filesystem" .Values.persistence.pvc.volumeMode | quote }}
+  {{- with .Values.persistence.pvc.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.persistence.pvc.volumeName }}
+  volumeName: {{ . | quote }}
+  {{- end }}
+{{- end }}

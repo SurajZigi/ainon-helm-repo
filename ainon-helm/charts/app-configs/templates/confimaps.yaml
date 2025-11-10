@@ -1,0 +1,16 @@
+{{- $namespace := .Values.namespace | default "default" }}
+{{- range $cmName, $cm := .Values.configmaps }}
+{{- if $cm.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $cmName }}
+  namespace: {{ $namespace }}
+data:
+  {{- range $key, $val := $cm.data }}
+  {{ $key }}: |-
+{{ $val | indent 4 }}
+  {{- end }}
+---
+{{- end }}
+{{- end }}

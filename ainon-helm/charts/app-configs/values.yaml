@@ -1,0 +1,110 @@
+configmaps:
+#first confmap
+  backend-env:
+    enabled: true
+    data:
+      env.docker.json: |-
+        {
+          "DEPLOYMENT": "aks",
+          "ENVIRONMENT": "prod",
+          "SECRET_FILE_NAME": "aws-secret/ainon-db",
+          "AKS_CELERY_BROKER_URL": "redis://redis:6379/1",
+          "ALLOWED_HOSTS": ["*"],
+          "DEBUG": false,
+          "CLAMAV_SCAN_ENABLED": true,
+          "TOKEN_TIMEOUT_MINUTES": 30,
+          "DEFAULT_ENGINE": "tesseract",
+          "FILE_SIZE_LIMIT_IN_MB": "25",
+          "FILE_NAME_MAX_LENGTH": "100",
+          "FILE_MAX_PAGES_ALLOWED": 10000,
+          "INITIAL_SUPER_USER": {
+            "USERNAME": "admin",
+            "EMAIL": "admin@xyz.com",
+            "PASSWORD": "password"
+          },
+          "ALLOW_IMAGE_UPLOAD": true,
+          "EXTRACTION_MODEL": "bert_large_ner",
+          "STORAGE_LIMIT_MB": 50000,
+          "GPG_PUBLIC_KEY": "ainon-gpg-public-key",
+          "GPG_KEY_FINGERPRINT": "ainon-gpg-key-fingerprint",
+          "GPG_RECIPIENT_EMAIL": "abc@gmail.com",
+          "WATERMARK_PROPERTIES": {
+            "font_size": 15,
+            "watermark_color": "(0.7, 0.7, 0.7)",
+            "watermark_text": "REDACTED - HIPAA PROTECTED"
+          },
+          "STORAGE_PROVIDER_NAME": "s3",
+          "AWS_REGION": "us-east-1",
+          "ENABLE_HOTJAR": true,
+          "HOTJAR_EXCLUSIONS": "document,checkout",
+          "EXCEL_COLUMN_AUTO_DETECTION": true,
+          "CONFIDENCE_THRESHOLDS": {
+            "default": 0
+          },
+          "HEAVY_TASK_QUEUE": "heavy",
+          "FOLDER_LIMIT": 5,
+          "SENDER_EMAIL": "",
+          "SENDER_EMAIL_NAME": "Ainon",
+          "AINON_SUPPORT_EMAIL": "support@abc.com",
+          "MAX_FILES_IN_ZIP": "10",
+          "NEW_DASHBOARD_DATE": "04/02/2024",
+          "FREE_TRIAL_PAGES": 100000,
+          "FREE_TRIAL_EXPIRATION": 100,
+          "KEY_VAULT_ENV_NAME": "abc",
+          "RESTRICT_ADMIN": false,
+          "TESSERACT_MAX_WORKERS": 2
+        }
+
+  #second configmap
+  frontend-admin-env:
+    enabled: true
+    data:
+      .env: |-
+        VITE_BE_API_URL=https://www.testainondomain.com/api/
+        NUXT_PUBLIC_API_BASE=https://www.testainondomain.com/api/
+  #third configmap
+  frontend-env:
+    enabled: true
+    data:
+      .env: |-
+        # This file is used to configure environment variables for the frontend application.
+        # Set the backend API URL, replace <host> with your actual host.
+        BE_API_URL=https://www.testainondomain.com/api/
+        # Set the public API base URL for Nuxt.js, replace <host> with your actual host.
+        NUXT_PUBLIC_API_BASE=https://www.testainondomain.com/api/
+        # Session timeout duration in milliseconds (e.g., 1800000 ms = 30 minutes)
+        AUTO_LOGIN_TIME=1800000
+        # Maximum file size limit for uploads in megabytes
+        FILE_SIZE_LIMIT_IN_MB=25
+        # Maximum length for file names
+        FILE_NAME_MAX_LENGTH=100
+        # reCAPTCHA site key for bot protection
+        RECAPTCHA_SITE_KEY=6Lc5hxkgAAAAABXaZYf1ZBD_l-S_WDeK3pwtUcuU
+        # Maximum number of pages allowed per file
+        FILE_MAX_PAGES_ALLOWED=100
+        # Margin for word selection accuracy
+        WORD_SELECTION_MARGIN=0.05
+        # Enable or disable image upload feature
+        ALLOW_IMAGE_UPLOAD=true
+        # Frontend URL, replace <host> with your actual host.
+        FE_URL=https://www.testainondomain.com/
+        DEPLOYMENT=aks # local for local server , aks for deployment
+        # Enable or disable user registration
+        FREE_TRIAL_PAGES=25
+
+#ohter configmaps
+
+# Add secrets like this: base64 encoded auth token
+secrets:
+  dockerhub-secret:
+    enabled: true
+    type: kubernetes.io/dockerconfigjson
+    data:
+      .dockerconfigjson: |
+        {
+          "auths": {
+            "https://index.docker.io/v1/": {
+              "auth": "bWZzaXN1cmFqazpkY2tyX3BhdF9KRlVyYmRIUWdKWEtudnFhaGlMWmFjYTgyVkk=" 
+            }
+          }
+        }

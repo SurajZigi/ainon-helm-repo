@@ -1,0 +1,116 @@
+replicaCount: 1
+
+image:
+  repository: pivotai/ainon-app-user
+  tag: "latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: dockerhub-secret
+
+podLabels:
+  app: vue-web-app
+  tier: frontend
+
+service:
+  type: ClusterIP
+  port: 3001
+  targetPort: 3001
+  containerPort: 3001
+
+env:
+  enabled: true
+  items:
+    - name: HOST_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.hostIP
+          
+configMaps:
+  frontendEnv:
+    name: frontend-env
+
+volumes:
+  - name: frontend-env-volume
+    configMapName: frontend-env
+    defaultMode: 420
+    items:
+      - key: ".env"
+        path: ".env"
+
+volumeMounts:
+  - name: frontend-env-volume
+    mountPath: /app/.env
+    subPath: .env
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# resources:
+#   requests:
+#     cpu: 1169m
+#   limits:
+#     cpu: 2000m
+      
+#--- ohter params -----------
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+
+
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

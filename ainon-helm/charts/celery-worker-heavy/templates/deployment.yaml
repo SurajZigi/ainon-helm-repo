@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "celery-worker-heavy.fullname" . }}
+  labels:
+    {{- include "celery-worker-heavy.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "celery-worker-heavy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "celery-worker-heavy.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ default .Values.serviceAccount.name .Values.serviceAccountName | quote }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if and .Values.command.enabled .Values.command.shell .Values.command.args }}
+          command:
+            - {{ .Values.command.shell | quote }}
+            - "-c"
+          args:
+            {{- toYaml .Values.command.args | nindent 12 }}
+          {{- end }}
+          {{- $env := default (dict) .Values.env }}
+          {{- if and ($env.enabled) ($env.items) }}
+          env:
+            {{- toYaml $env.items | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.secretsStore.enabled }}
+            - name: {{ .Values.secretsStore.volumeName }}
+              mountPath: {{ .Values.secretsStore.mountPath }}
+              readOnly: true
+          {{- end }}                   
+      {{- with .Values.volumes }}
+      volumes:
+        {{- range . }}
+        - name: {{ .name }}
+          {{- if .configMapName }}
+          configMap:
+            name: {{ .configMapName }}
+            {{- if .defaultMode }}
+            defaultMode: {{ .defaultMode }}
+            {{- end }}
+            {{- if .items }}
+            items:
+              {{- toYaml .items | nindent 14 }}
+            {{- end }}
+          {{- end }}
+          {{- if .persistentVolumeClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .persistentVolumeClaim }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+        {{- if .Values.secretsStore.enabled }}
+        - name: {{ .Values.secretsStore.volumeName }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretsStore.secretProviderClassName | quote }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

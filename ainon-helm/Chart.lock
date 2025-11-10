@@ -1,0 +1,33 @@
+dependencies:
+- name: django-web-app
+  repository: ""
+  version: 0.1.0
+- name: redis
+  repository: ""
+  version: 0.1.0
+- name: postgres
+  repository: ""
+  version: 0.1.0
+- name: celery-beat
+  repository: ""
+  version: 0.1.0
+- name: celery-worker
+  repository: ""
+  version: 0.1.0
+- name: celery-worker-heavy
+  repository: ""
+  version: 0.1.0
+- name: clamav
+  repository: ""
+  version: 0.1.0
+- name: proxy
+  repository: ""
+  version: 0.1.0
+- name: nuxt3-admin
+  repository: ""
+  version: 0.1.0
+- name: vue-web-app
+  repository: ""
+  version: 0.1.0
+digest: sha256:e64f4f05f40d0345048a2f4fc43d68a41a07cfa1d0d766fd736df7f7956ceebf
+generated: "2025-10-28T08:22:34.658462+05:30"

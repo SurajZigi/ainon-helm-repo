@@ -1,0 +1,40 @@
+{{- if and .Values.persistence .Values.persistence.pv .Values.persistence.pv.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.persistence.pv.name | quote }}
+  {{- with .Values.persistence.pv.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.persistence.pv.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.pv.capacity | quote }}
+  accessModes:
+    {{- toYaml .Values.persistence.pv.accessModes | nindent 4 }}
+  volumeMode: {{ default "Filesystem" .Values.persistence.pv.volumeMode | quote }}
+  persistentVolumeReclaimPolicy: {{ default "Retain" .Values.persistence.pv.reclaimPolicy | quote }}
+  {{- with .Values.persistence.pv.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+
+  {{- if .Values.persistence.pv.hostPath }}
+  hostPath:
+    path: {{ .Values.persistence.pv.hostPath.path | quote }}
+    {{- with .Values.persistence.pv.hostPath.type }}
+    type: {{ . | quote }}
+    {{- end }}
+  {{- end }}
+
+  {{- if and .Values.persistence.pv.claimRef .Values.persistence.pv.claimRef.enabled .Values.persistence.pv.claimRef.name }}
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: {{ .Values.persistence.pv.claimRef.name | quote }}
+    namespace: {{ default .Release.Namespace .Values.persistence.pv.claimRef.namespace | quote }}
+  {{- end }}
+{{- end }}
