@@ -1,7 +1,4 @@
+#ainon-helm-repo
 
-C
-C
-C
-C
-C
-#iiainon-helm-repo
+Download and insall ainon applications
+
