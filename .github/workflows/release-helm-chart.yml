@@ -1,15 +1,10 @@
-name: Release Helm Chart
-
-on:
-  push:
-    branches:
-      - main  # Your default branch, confirmed to be 'main'
-
 jobs:
   release:
     runs-on: ubuntu-latest
-    steps:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Set job-level env
 
+    steps:
       - name: Checkout source code
         uses: actions/checkout@v3
 
@@ -17,11 +12,12 @@ jobs:
         uses: azure/setup-helm@v3
 
       - name: Package Helm chart
-        run: helm package ./ainon-helm  # Packages chart from this directory
+        run: helm package ./ainon-helm
 
       - name: Download secondary repo and update index
         env:
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Add here as well for step-level env
         run: |
           git clone https://x-access-token:${REPO_TOKEN}@github.com/SurajZigi/helm-hosting.git temp-helm-repo
           cd temp-helm-repo
