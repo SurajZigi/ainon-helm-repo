@@ -1,3 +1,10 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - main  # Your default branch, confirmed to be 'main'
+
 jobs:
   release:
     runs-on: ubuntu-latest
