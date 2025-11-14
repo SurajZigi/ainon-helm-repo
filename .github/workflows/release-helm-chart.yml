@@ -1,15 +1,15 @@
-name: Release Helm Chart
+name: Release Helm Chart Webpage
 
 on:
   push:
     branches:
-      - main  # Your default branch, confirmed to be 'main'
+      - main  # Adjust if your default branch differs
 
 jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Set job-level env
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Provided by GitHub automatically
 
     steps:
       - name: Checkout source code
@@ -19,19 +19,37 @@ jobs:
         uses: azure/setup-helm@v3
 
       - name: Package Helm chart
-        run: helm package ./ainon-helm
+        run: helm package ./ainon-helm  # Adjust if chart directory is different
 
-      - name: Download secondary repo and update index
+      - name: Clone hosting repo
         env:
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Add here as well for step-level env
         run: |
           git clone https://x-access-token:${REPO_TOKEN}@github.com/SurajZigi/helm-hosting.git temp-helm-repo
+
+      - name: Copy packaged charts to hosting repo
+        run: |
+          cp ./ainon-helm-*.tgz temp-helm-repo/
+
+      - name: Update Helm repo index
+        run: |
           cd temp-helm-repo
-          cp ../ainon-helm-*.tgz .
           helm repo index . --url https://SurajZigi.github.io/helm-hosting/
+
+      - name: Generate download webpage
+        run: |
+          cd temp-helm-repo
+          echo "<html><body><h1>Helm Chart Packages</h1><ul>" > index.html
+          for f in *.tgz; do
+            echo "<li><a href=\"$f\">$f</a></li>" >> index.html
+          done
+          echo "</ul></body></html>" >> index.html
+
+      - name: Commit and push changes
+        run: |
+          cd temp-helm-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
+          git add index.yaml index.html *.tgz
           git commit -m "Release new chart version from $GITHUB_SHA" || echo "No changes to commit"
           git push origin main
