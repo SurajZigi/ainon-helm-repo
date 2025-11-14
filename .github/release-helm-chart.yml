@@ -1,0 +1,35 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Package Helm chart
+        run: helm package ./your-chart-directory
+
+      - name: Download secondary repo and update index
+        env:
+          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+        run: |
+          git clone https://x-access-token:${REPO_TOKEN}@github.com/your-org/secondary-helm-repo.git temp-helm-repo
+          cd temp-helm-repo
+          # Copy packaged chart
+          cp ../your-chart-*.tgz .
+          # Update helm repo index - ensure base URL is your repo URL for GitHub Pages or raw files
+          helm repo index . --url https://your-org.github.io/secondary-helm-repo/
+          git add .
+          git commit -m "Release new chart version from $GITHUB_SHA"
+          git push origin master
+
+
