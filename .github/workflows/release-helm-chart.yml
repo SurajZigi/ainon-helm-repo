@@ -3,7 +3,7 @@ name: Release Helm Chart
 on:
   push:
     branches:
-      - main
+      - main  # use your actual default branch here
 
 jobs:
   release:
@@ -16,20 +16,18 @@ jobs:
         uses: azure/setup-helm@v3
 
       - name: Package Helm chart
-        run: helm package ./ainon-helm
+        run: helm package ./ainon-helm  # Your chart directory
 
       - name: Download secondary repo and update index
         env:
           REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
         run: |
-          git clone https://x-access-token:${REPO_TOKEN}@github.com/your-org/secondary-helm-repo.git temp-helm-repo
+          git clone https://x-access-token:${REPO_TOKEN}@github.com/SurajZigi/helm-hosting.git temp-helm-repo
           cd temp-helm-repo
-          # Copy packaged chart
-          cp ../your-chart-*.tgz .
-          # Update helm repo index - ensure base URL is your repo URL for GitHub Pages or raw files
-          helm repo index . --url https://your-org.github.io/secondary-helm-repo/
+          cp ../ainon-helm-*.tgz .
+          helm repo index . --url https://SurajZigi.github.io/helm-hosting/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Release new chart version from $GITHUB_SHA"
-          git push origin master
-
-
+          git commit -m "Release new chart version from $GITHUB_SHA" || echo "No changes to commit"
+          git push origin main
