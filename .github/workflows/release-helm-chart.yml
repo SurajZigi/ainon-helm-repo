@@ -16,7 +16,7 @@ jobs:
         uses: azure/setup-helm@v3
 
       - name: Package Helm chart
-        run: helm package ./your-chart-directory
+        run: helm package ./ainon-helm
 
       - name: Download secondary repo and update index
         env:
