@@ -3,12 +3,13 @@ name: Release Helm Chart
 on:
   push:
     branches:
-      - main  # use your actual default branch here
+      - main  # Your default branch, confirmed to be 'main'
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout source code
         uses: actions/checkout@v3
 
@@ -16,7 +17,7 @@ jobs:
         uses: azure/setup-helm@v3
 
       - name: Package Helm chart
-        run: helm package ./ainon-helm  # Your chart directory
+        run: helm package ./ainon-helm  # Packages chart from this directory
 
       - name: Download secondary repo and update index
         env:
